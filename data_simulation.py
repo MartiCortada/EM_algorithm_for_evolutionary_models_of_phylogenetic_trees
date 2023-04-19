@@ -105,15 +105,12 @@ def get_M2(new_distribution,d2,l):
             elif s.is_complex:
                 b = np.imag(s)
                 a = sp.re(s)
-                print("a", a)
-                print("b", b)
                 if np.abs(b) < 10**-20 and a > 0 and a < 1:
                     res = sp.re(s)
                     res = np.float64(res)
                     P = (1-res)*P + res*np.identity(4)
                     iter = False
                     break
-        print(sol)
     return P
 
 def generate_random_matrix(distribution, l):
