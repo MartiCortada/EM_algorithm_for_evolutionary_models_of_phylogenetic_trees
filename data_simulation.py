@@ -187,4 +187,4 @@ def simulate(net):
         file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
         iter += 1
     file.close()
-    return edges
+    return edges, node_distribution
