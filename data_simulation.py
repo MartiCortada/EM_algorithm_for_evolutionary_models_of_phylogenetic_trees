@@ -164,9 +164,9 @@ def generate_sequences(M, seq):
 
 def simulate(net):
     node_distribution = dict()
-    node_distribution["Root"] = init_root_distribution()
+    node_distribution["Int_0"] = init_root_distribution()
     node_sequence = dict()
-    node_sequence["Root"] = generate_alignment(1000, node_distribution["Root"])
+    node_sequence["Int_0"] = generate_alignment(1000, node_distribution["Int_0"])
     iter = 0
     edges = []
     for edge in net.edges():
