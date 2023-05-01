@@ -178,9 +178,9 @@ def matrix_generation(tree, length):
         if Res == True:
             B = True
 
-    node_distribution["Root"] = R
+    node_distribution["Int_0"] = R
     node_sequence = dict()
-    node_sequence["Root"] = generate_alignment(int(length), node_distribution["Root"])
+    node_sequence["Int_0"] = generate_alignment(int(length), node_distribution["Int_0"])
     #print(node_distribution["Root"])
 
     # path_t = tree
@@ -189,7 +189,7 @@ def matrix_generation(tree, length):
     tree = Phylo.read(StringIO(tree), "newick")
     # Change nodes names
     for idx, clade in enumerate(tree.get_nonterminals()):
-        clade.name = "Node_" + str(idx) if idx > 0 else "Int_0"
+        clade.name = "Int_" + str(idx) if idx > 0 else "Int_0"
     # Change leaves names
     for idx, clade in enumerate(tree.get_terminals()):
         clade.name = "Leaf_" + clade.name
