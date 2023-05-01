@@ -34,9 +34,9 @@ def FullRecon(sequences, tree):
         #print(" ")
 
     # Read phylogenetic tree (Newick tree format)
-    path_t = tree
-    tree_file = open(path_t, "r")
-    tree = tree_file.read()
+    # path_t = tree
+    # tree_file = open(path_t, "r")
+    # tree = tree_file.read()
     tree = Phylo.read(StringIO(tree), "newick")
 
     # Change nodes names
