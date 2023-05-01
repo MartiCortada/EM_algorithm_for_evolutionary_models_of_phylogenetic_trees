@@ -189,7 +189,7 @@ def matrix_generation(tree, length):
     tree = Phylo.read(StringIO(tree), "newick")
     # Change nodes names
     for idx, clade in enumerate(tree.get_nonterminals()):
-        clade.name = "Node_" + str(idx) if idx > 0 else "Root"
+        clade.name = "Node_" + str(idx) if idx > 0 else "Int_0"
     # Change leaves names
     for idx, clade in enumerate(tree.get_terminals()):
         clade.name = "Leaf_" + clade.name
