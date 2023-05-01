@@ -41,7 +41,7 @@ def FullRecon(sequences, tree):
 
     # Change nodes names
     for idx, clade in enumerate(tree.get_nonterminals()):
-        clade.name = "Node_" + str(idx) if idx > 0 else "Root"
+        clade.name = "Int_" + str(idx) if idx > 0 else "Int_0"
     # Change leaves names
     for idx, clade in enumerate(tree.get_terminals()):
         clade.name = "Leaf_" + clade.name
