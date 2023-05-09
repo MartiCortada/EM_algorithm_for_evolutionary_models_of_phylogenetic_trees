@@ -193,7 +193,7 @@ def matrix_generation(tree, length):
     # Change leaves names
     for idx, clade in enumerate(tree.get_terminals()):
         clade.name = "Leaf_" + clade.name
-    Phylo.draw(tree)
+    # Phylo.draw(tree)
     net = Phylo.to_networkx(tree) # to graph
 
     iter = 0
