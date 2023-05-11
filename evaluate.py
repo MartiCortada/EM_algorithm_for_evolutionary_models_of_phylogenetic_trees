@@ -17,10 +17,10 @@ def init_EM(tree, length, save, directory):
 
         ###print(r)
         if r == 0:
-            Results, final_nodes_distributions, net = FullRecon(sequences_file_name, tree)
+            Results, final_nodes_distributions, net = FullRecon(sequences_file_name, tree, directory)
 
         else:
-            Res, distr, _ = FullRecon(sequences_file_name, tree)
+            Res, distr, _ = FullRecon(sequences_file_name, tree, directory)
             for MutationMatrixA in Res:
                 for MutationMatrixB in Results:
                     if (str(MutationMatrixA.source) == str(MutationMatrixB.source) and str(MutationMatrixA.target)==str(MutationMatrixB.target)):

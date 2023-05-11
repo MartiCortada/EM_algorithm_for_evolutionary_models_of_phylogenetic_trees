@@ -20,12 +20,12 @@ def obtain_matrix(Results, source, target):
             return matrix
 
 
-def FullRecon(sequences, tree):
+def FullRecon(sequences, tree, directory):
     ###--------------------------------------------------------------------------###
     ### Preparing the data
 
     # Read sequences (FASTA file)
-    path_s = sequences
+    path_s = directory + sequences
     sequences = [i for i in SeqIO.parse(path_s, 'fasta')]
     n_sequences = len(sequences) # Number of sequences
     for i in range (n_sequences):
