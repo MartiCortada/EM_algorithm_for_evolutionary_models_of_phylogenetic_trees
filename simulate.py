@@ -237,4 +237,4 @@ def matrix_generation(tree, length):
         iter += 1
     file.close()
 
-    return real_matrices, file_name
+    return real_matrices, file_name, file_name
