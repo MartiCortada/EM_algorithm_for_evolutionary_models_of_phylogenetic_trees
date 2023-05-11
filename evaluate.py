@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-def init_EM(tree, length):
+def init_EM(tree, length, save, directory):
 
     repetitions = 25
 
     tree = tree
     length = length
 
-    real_matrices, sequences_file_name = matrix_generation(tree, length)
+    real_matrices, sequences_file_name = matrix_generation(tree, length, save, directory)
 
     for r in range(repetitions):
 

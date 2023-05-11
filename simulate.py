@@ -168,7 +168,7 @@ def generate_sequences(M, seq):
     return new_seq
 
 
-def matrix_generation(tree, length):
+def matrix_generation(tree, length, save, directory):
 
     node_distribution = dict()
     B = False
@@ -231,10 +231,11 @@ def matrix_generation(tree, length):
     keys_for_sequences = list(leaves_seq.keys())
     iter = 0
     file_name = str(len(sequences_in_leaves))+ "_leaves_" + str(len(sequences_in_leaves[0])) + "length_sequences.fasta"
-    file = open(file_name, "w")
-    for seq in sequences_in_leaves:
-        file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
-        iter += 1
-    file.close()
+    if save == True:
+        file = open(directory+file_name, "w")
+        for seq in sequences_in_leaves:
+            file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
+            iter += 1
+        file.close()
 
     return real_matrices, file_name
