@@ -159,7 +159,7 @@ def generate_sequences(M, seq):
             new_seq += np.random.choice(['A', 'G', 'C', 'T'], p=M[3,:])
     return new_seq
 
-def simulate(net, length):
+def simulate(net, length, directory):
     node_distribution = dict()
     node_distribution["Int_0"] = init_root_distribution()
     node_sequence = dict()
@@ -183,7 +183,7 @@ def simulate(net, length):
     keys_for_sequences = list(leaves_seq.keys())
     iter = 0
     file_name = str(len(sequences_in_leaves))+ "_leaves_" + str(len(sequences_in_leaves[0])) + "length_sequences.fasta"
-    file = open(file_name, "w")
+    file = open(directory+file_name, "w")
     for seq in sequences_in_leaves:
         file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
         iter += 1

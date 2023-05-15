@@ -168,6 +168,8 @@ for i in range(len(sorted_hidden_combinations)):
 states = list(itertools.product(list(sorted_hidden_combinations), list(u_i.keys())))
 states = [i[0]+i[1] for i in states]
 
+print("running EM...")
+print("---"*10)
 for r in range(repetitions):
     ################################################################################################
     ################################ STEP 0: Initialise parameters #################################
@@ -306,3 +308,7 @@ for r in range(repetitions):
 
 
 print("Done!")
+
+# Debugging: print the content of the file "real_matrices.npy"
+data = np.load(directory+"real_matrices.npy", allow_pickle=True).item()
+print(data)
