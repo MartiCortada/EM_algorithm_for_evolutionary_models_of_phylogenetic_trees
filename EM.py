@@ -353,7 +353,10 @@ for r in range(repetitions):
     out = open(rep_directory+"TExec.txt", "w", encoding='latin-1')
     out.write(f"{elapsed_time}")
     out.close() 
-    np.save(rep_directory+"M_estimation.npy", params)
+    M_estimation = dict()
+    for p in params.items():
+        M_estimation[p[0]] = p[1].transition_matrix
+    np.save(rep_directory+"M_estimation.npy", M_estimation)
     np.save(rep_directory+"root_estimation.npy", root_distr)
     bl = compute_branch_length(params, root_distr, False)
     np.save(rep_directory + "estimated_branch_lengths", bl) 
