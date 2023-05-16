@@ -4,11 +4,11 @@ from Bio import SeqIO, Phylo
 from io import StringIO
 from collections import Counter, OrderedDict
 import itertools
-import pandas as pd
 import math
 import copy
 import sys
 import os
+import time
 # Import required functions from modules we have programmed
 from data_simulation import simulate
 from evaluate import init_EM
@@ -28,6 +28,11 @@ except FileExistsError:
 try:
     directory += name_output + "/" 
     os.mkdir(directory)
+except FileExistsError:
+    pass
+try:
+    results = directory + "RESULTS/" 
+    os.mkdir(results)
 except FileExistsError:
     pass
 
@@ -71,8 +76,8 @@ for i in range(len(edges)):
     v = edges[i].edge[1].name.split("_")[1]
     matrix_name = "M_" + str(u) + "_to_" + str(v) 
     real_matrices[matrix_name] = np.array(edges[i].transition_matrix)
-np.save(directory + "real_matrices", real_matrices) # save the dictionary to a file
-
+np.save(directory + "real_matrices", real_matrices) 
+np.save(directory + "real_root_distr", node_distr["Int_0"]) 
 
 ###################################### Auxiliary functions ######################################
 def init_root_distribution():
@@ -128,6 +133,29 @@ def log_likelihood(states, u_i, params, root_distribution, n_int):
         logL += (u_i[observed_data] * math.log(p_i))
     return logL
 
+def compute_branch_length(params, node_distr, real_params):
+    """
+    Compute the branch length of the tree
+    """
+    debg_node_distr = dict()
+    branch_length = dict()
+    if real_params == True:
+        for i in node_distr.items():
+            debg_node_distr[i[0].split("_")[1]] = i[1]
+        for p in params.items():
+            u, v = int(p[0].split("_")[1]), int(p[0].split("_")[3])
+            branch_length[f"M_{u}_to_{v}"] = -math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1]))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)])))))
+    else:
+        debg_node_distr["0"] = node_distr
+        for p in params.items():
+            u, v = int(p[0].split("_")[1]), int(p[0].split("_")[3])
+            debg_node_distr[str(v)] = np.matmul(debg_node_distr[str(u)], p[1].transition_matrix)
+            branch_length[f"M_{u}_to_{v}"] = -math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1].transition_matrix))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)])))))
+    return branch_length
+
+bl = compute_branch_length(real_matrices, node_distr, True)
+np.save(directory + "real_branch_lengths", bl) 
+
 class Param:
     """
     Class to store the parameters of the tree
@@ -136,6 +164,7 @@ class Param:
         self.edge = edge
         self.transition_matrix = transition_matrix
         self.alignment = alignment # it will only be placed in the leaves
+
 
 # Obtain number of leaves and internal nodes
 n_leaves, n_int = 0, 0 
@@ -171,6 +200,8 @@ states = [i[0]+i[1] for i in states]
 print("running EM...")
 print("---"*10)
 for r in range(repetitions):
+    start_time = time.time()
+
     ################################################################################################
     ################################ STEP 0: Initialise parameters #################################
     ################################################################################################
@@ -303,12 +334,28 @@ for r in range(repetitions):
         logL_ = log_likelihood(states, u_i, params, root_distr, n_int)
 
         iter += 1
+    end_time = time.time()
+    elapsed_time = end_time - start_time
     print(f"Repetition {r+1} done!")
     print("Number of iterations: ", iter)
+    print("Execution time: ", elapsed_time)
+    print("---"*10)
 
+    # Save the results
+    try:
+        rep_directory = results + "repetition_" + str(r+1) + "/"
+        os.mkdir(rep_directory)
+    except FileExistsError:
+        pass
+    out = open(rep_directory+"Niter.txt", "w", encoding='latin-1')
+    out.write(f"{iter}")
+    out.close() 
+    out = open(rep_directory+"TExec.txt", "w", encoding='latin-1')
+    out.write(f"{elapsed_time}")
+    out.close() 
+    np.save(rep_directory+"M_estimation.npy", params)
+    np.save(rep_directory+"root_estimation.npy", root_distr)
+    bl = compute_branch_length(params, root_distr, False)
+    np.save(rep_directory + "estimated_branch_lengths", bl) 
 
 print("Done!")
-
-# Debugging: print the content of the file "real_matrices.npy"
-data = np.load(directory+"real_matrices.npy", allow_pickle=True).item()
-print(data)
