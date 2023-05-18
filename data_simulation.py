@@ -36,10 +36,10 @@ def generate_alignment(length, distribution):
     """
     Generates an alignment of length `length` using a given `distribution`.
     """
-    seq = ''
+    seq = ""
     for i in range(length):
         # generate a random sample from the multinomial distribution
-        nucleotide = np.random.choice(['A', 'G', 'C', 'T'], p=distribution)
+        nucleotide = np.random.choice(["A", "G", "C", "T"], p=distribution)
         seq += nucleotide
     return seq
 
