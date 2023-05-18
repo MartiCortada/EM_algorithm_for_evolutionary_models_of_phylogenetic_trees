@@ -197,6 +197,37 @@ for i in range(len(sorted_hidden_combinations)):
 states = list(itertools.product(list(sorted_hidden_combinations), list(u_i.keys())))
 states = [i[0]+i[1] for i in states]
 
+def simulate(net, length, directory):
+    node_distribution = dict()
+    node_distribution["Int_0"] = init_root_distribution()
+    node_sequence = dict()
+    node_sequence["Int_0"] = generate_alignment(int(length), node_distribution["Int_0"])
+    iter = 0
+    edges = []
+    for edge in net.edges():
+        # Extract branch length
+        l = edge[1].branch_length
+        new_edge = Edge(edge, generate_random_matrix(node_distribution[edge[0].name], l))
+        edges.append(new_edge)
+        node_distribution[edge[1].name] = np.matmul(node_distribution[edge[0].name],new_edge.transition_matrix)
+        for i in range(4):
+            assert(np.sum(new_edge.transition_matrix[i,:])<1.000000001 and np.sum(new_edge.transition_matrix[i,:])>0.999999999)
+        # create alignment for the node
+        node_sequence[edge[1].name] = generate_sequences(new_edge.transition_matrix, node_sequence[edge[0].name])
+        iter += 1
+    assert(iter == len(net.edges()))
+    leaves_seq = {k: v for k, v in node_sequence.items() if k.startswith('L')}
+    sequences_in_leaves = list(leaves_seq.values())
+    keys_for_sequences = list(leaves_seq.keys())
+    iter = 0
+    file_name = str(len(sequences_in_leaves))+ "_leaves_" + str(len(sequences_in_leaves[0])) + "length_sequences.fasta"
+    file = open(directory+file_name, "w")
+    for seq in sequences_in_leaves:
+        file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
+        iter += 1
+    file.close()
+    return edges, node_distribution, file_name
+
 print("running EM...")
 print("---"*10)
 for r in range(repetitions):
