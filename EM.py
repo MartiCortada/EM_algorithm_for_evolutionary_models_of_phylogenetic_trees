@@ -10,7 +10,7 @@ import sys
 import os
 import time
 # Import required functions from modules we have programmed
-from data_simulation import simulate
+from data_simulation import simulate, generate_alignment, generate_sequences
 from evaluate import init_EM
 
 newick_input = sys.argv[1]
@@ -18,6 +18,8 @@ init = sys.argv[2]
 length = int(sys.argv[3])
 repetitions = int(sys.argv[4])
 name_output = sys.argv[5]
+
+eps = 10**(-3)                  # epsilon for convergence
 
 # Create a directory to store the results
 try:
@@ -153,8 +155,25 @@ def compute_branch_length(params, node_distr, real_params):
             branch_length[f"M_{u}_to_{v}"] = -math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1].transition_matrix))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)])))))
     return branch_length
 
-bl = compute_branch_length(real_matrices, node_distr, True)
-np.save(directory + "real_branch_lengths", bl) 
+def get_fasta_alignment(params, node_distr, directory, length): 
+    """
+    Generate a fasta file with the alignment of the given parameters.
+    """          
+    node_sequence = dict()
+    node_sequence["Int_0"] = generate_alignment(length, node_distr["Int_0"])
+    for p in params.items():
+        node_sequence[p[1].edge[1].name] = generate_sequences(p[1].transition_matrix, node_sequence[p[1].edge[0].name])
+    leaves_seq = {k: v for k, v in node_sequence.items() if k.startswith('L')}
+    sequences_in_leaves = list(leaves_seq.values())
+    keys_for_sequences = list(leaves_seq.keys())
+    iter = 0
+    file_name = str(len(sequences_in_leaves))+ "_leaves_" + str(len(sequences_in_leaves[0])) + "length_sequences.fasta"
+    file = open(directory+file_name, "w")
+    for seq in sequences_in_leaves:
+        file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
+        iter += 1
+    file.close() 
+    return file_name 
 
 class Param:
     """
@@ -165,7 +184,6 @@ class Param:
         self.transition_matrix = transition_matrix
         self.alignment = alignment # it will only be placed in the leaves
 
-
 # Obtain number of leaves and internal nodes
 n_leaves, n_int = 0, 0 
 for node in net.nodes():
@@ -174,65 +192,41 @@ for node in net.nodes():
     else:
         n_int += 1
 
-# Count all the leaves ocurrences 
-sequence_length = len(leave_sequences[0])
-number_of_sequences = len(leave_sequences)
-occurrences = []
-for i in range(sequence_length):
-    _ = ''
-    for j in range(number_of_sequences):
-        _ += leave_sequences[j][i]
-    occurrences.append(_)
-c = Counter(occurrences)
-u_i = OrderedDict(sorted(c.items()))
-
 # Define all possible (hidden) states of the internal nodes 
 hidden_combinations = itertools.product([0,1,2,3], repeat=n_int)
 sorted_hidden_combinations = sorted(hidden_combinations)
 for i in range(len(sorted_hidden_combinations)):
     sorted_hidden_combinations[i] = ''.join([str(s) for s in sorted_hidden_combinations[i]])
- 
-# Define all possible fully observed states (i.e. combining u_i + internal nodes)
-# '000000' would mean to have an 'A' in all nodes: Int_0, Int_1, Leaf_2, Leaf_3, Leaf_4, Leaf_5 
-states = list(itertools.product(list(sorted_hidden_combinations), list(u_i.keys())))
-states = [i[0]+i[1] for i in states]
 
-def simulate(net, length, directory):
-    node_distribution = dict()
-    node_distribution["Int_0"] = init_root_distribution()
-    node_sequence = dict()
-    node_sequence["Int_0"] = generate_alignment(int(length), node_distribution["Int_0"])
-    iter = 0
-    edges = []
-    for edge in net.edges():
-        # Extract branch length
-        l = edge[1].branch_length
-        new_edge = Edge(edge, generate_random_matrix(node_distribution[edge[0].name], l))
-        edges.append(new_edge)
-        node_distribution[edge[1].name] = np.matmul(node_distribution[edge[0].name],new_edge.transition_matrix)
-        for i in range(4):
-            assert(np.sum(new_edge.transition_matrix[i,:])<1.000000001 and np.sum(new_edge.transition_matrix[i,:])>0.999999999)
-        # create alignment for the node
-        node_sequence[edge[1].name] = generate_sequences(new_edge.transition_matrix, node_sequence[edge[0].name])
-        iter += 1
-    assert(iter == len(net.edges()))
-    leaves_seq = {k: v for k, v in node_sequence.items() if k.startswith('L')}
-    sequences_in_leaves = list(leaves_seq.values())
-    keys_for_sequences = list(leaves_seq.keys())
-    iter = 0
-    file_name = str(len(sequences_in_leaves))+ "_leaves_" + str(len(sequences_in_leaves[0])) + "length_sequences.fasta"
-    file = open(directory+file_name, "w")
-    for seq in sequences_in_leaves:
-        file.write(">Seq" + str(keys_for_sequences[iter]) + "\n" + seq + "\n")
-        iter += 1
-    file.close()
-    return edges, node_distribution, file_name
+# Branch length of the real tree
+bl = compute_branch_length(real_matrices, node_distr, True)
+np.save(directory + "real_branch_lengths", bl) 
 
+PARAMS_init = dict() # Dictionary to store the estimation matrices for each edge
+for edge in net.edges():
+    # If we are in a leaf, we need to specify the alignment
+    iter_leaves = 0
+    u = str(edge[0].name.split("_")[1])
+    v = str(edge[1].name.split("_")[1])
+    matrix_name = "M_" + str(u) + "_to_" + str(v)
+    if edge[1].name.startswith("L"):
+        new_edge = Param(edge, real_matrices[matrix_name], leave_alignments[iter_leaves].seq)
+        iter_leaves += 1
+    # Otherwise, are in internal nodes
+    else:
+        new_edge = Param(edge, real_matrices[matrix_name])
+    PARAMS_init[matrix_name] = new_edge
+
+################################# EXPECTATION-MAXIMIZATION ALGORITHM #################################
 print("running EM...")
 print("---"*10)
 for r in range(repetitions):
+    try:
+        rep_directory = results + "repetition_" + str(r+1) + "/"
+        os.mkdir(rep_directory)
+    except FileExistsError:
+        pass
     start_time = time.time()
-
     ################################################################################################
     ################################ STEP 0: Initialise parameters #################################
     ################################################################################################
@@ -257,7 +251,6 @@ for r in range(repetitions):
             name = "M_" + u + "_to_" + v
             PARAMS[name] = new_edge
             i += 1
-
     elif init == "random":
         PARAMS = dict() # Dictionary to store the estimation matrices for each edge
         for edge in net.edges():
@@ -273,18 +266,54 @@ for r in range(repetitions):
             v = str(edge[1].name.split("_")[1])
             name = "M_" + u + "_to_" + v
             PARAMS[name] = new_edge
-
     else:
         print("ERROR: The initialisation method is not valid. Try either 'spectral' or 'random'.")
         sys.exit()
-
-    eps = 10**(-3)                  # epsilon for convergence
-    iter = 0                        # iteration counter 
     params = copy.copy(PARAMS)      # copy of the parameters (will be updated at each iteration)
+    
+    # Count all the leaves ocurrences 
+    sequence_length = len(leave_sequences[0])
+    number_of_sequences = len(leave_sequences)
+    occurrences = []
+    for i in range(sequence_length):
+        _ = ''
+        for j in range(number_of_sequences):
+            _ += leave_sequences[j][i]
+        occurrences.append(_)
+    c = Counter(occurrences)
+    u_i = OrderedDict(sorted(c.items()))
+
+    file_name = get_fasta_alignment(PARAMS_init, node_distr, rep_directory, length)
+    # Preprocess leave alignments
+    leave_alignments = [i for i in SeqIO.parse(rep_directory+filename, "fasta")]
+    # Codify the alphabet {A,G,C,T} -> {0,1,2,3}
+    leave_sequences = []
+    for i in leave_alignments:
+        seq = ""
+        for j in i.seq:
+            if j == "A":
+                seq += "0"
+            elif j == "G":
+                seq += "1"
+            elif j == "C":
+                seq += "2"
+            elif j == "T":
+                seq += "3"
+            else:
+                raise ValueError("Invalid nucleotide")
+        leave_sequences.append(seq)
+
+    # Define all possible fully observed states (i.e. combining u_i + internal nodes)
+    # '000000' would mean to have an 'A' in all nodes: Int_0, Int_1, Leaf_2, Leaf_3, Leaf_4, Leaf_5 
+    states = list(itertools.product(list(sorted_hidden_combinations), list(u_i.keys())))
+    states = [i[0]+i[1] for i in states]
+    
+    iter = 0                        # iteration counter 
     logL = log_likelihood(states, u_i, params, estimated_root_distribution, n_int)
     logL_ = 0
 
     while np.abs(logL_ - logL) > eps and iter < 100:
+        print(np.abs(logL_ - logL))
         if iter > 0:
             logL = logL_
 
@@ -373,11 +402,6 @@ for r in range(repetitions):
     print("---"*10)
 
     # Save the results
-    try:
-        rep_directory = results + "repetition_" + str(r+1) + "/"
-        os.mkdir(rep_directory)
-    except FileExistsError:
-        pass
     out = open(rep_directory+"Niter.txt", "w", encoding='latin-1')
     out.write(f"{iter}")
     out.close() 
