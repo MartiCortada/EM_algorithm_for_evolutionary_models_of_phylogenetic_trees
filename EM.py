@@ -313,7 +313,6 @@ for r in range(repetitions):
     logL_ = 0
 
     while np.abs(logL_ - logL) > eps and iter < 100:
-        print(np.abs(logL_ - logL))
         if iter > 0:
             logL = logL_
 
