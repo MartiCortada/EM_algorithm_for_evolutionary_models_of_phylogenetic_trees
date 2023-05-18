@@ -80,6 +80,16 @@ for i in range(len(edges)):
     real_matrices[matrix_name] = np.array(edges[i].transition_matrix)
 np.save(directory + "real_matrices", real_matrices) 
 np.save(directory + "real_root_distr", node_distr["Int_0"]) 
+# We are not interested in this .fasta file anymore
+file_path = directory+filename
+# Check if the file exists
+try:
+    if os.path.exists(file_path):
+        # Delete the file
+        os.remove(file_path)
+except OSError as error:
+    print("File does not exist.")
+    pass 
 
 ###################################### Auxiliary functions ######################################
 def init_root_distribution():
