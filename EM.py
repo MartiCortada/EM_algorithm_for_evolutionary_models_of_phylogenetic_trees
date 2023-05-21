@@ -244,7 +244,7 @@ for r in range(repetitions):
 
     # First estimation for the transition matrices
     if init == "spectral":
-        Results = init_EM(newick, length, save=False, directory=directory)
+        Results = init_EM(newick, length, save=True, directory=directory)
         i=0
         PARAMS = dict() # Dictionary to store the estimation matrices for each edge
         for edge in net.edges():
@@ -261,6 +261,15 @@ for r in range(repetitions):
             name = "M_" + u + "_to_" + v
             PARAMS[name] = new_edge
             i += 1
+        # Check if the file exists
+        try:
+            file_name = f"{n_leaves}_leaves_{length}length_sequences.fasta"
+            if os.path.exists(directory+file_name):
+                # Delete the file
+                os.remove(file_path)
+        except OSError as error:
+            print("File does not exist.")
+            pass 
     elif init == "random":
         PARAMS = dict() # Dictionary to store the estimation matrices for each edge
         for edge in net.edges():
