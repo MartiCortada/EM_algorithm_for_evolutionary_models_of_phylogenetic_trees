@@ -156,13 +156,13 @@ def compute_branch_length(params, node_distr, real_params):
             debg_node_distr[i[0].split("_")[1]] = i[1]
         for p in params.items():
             u, v = int(p[0].split("_")[1]), int(p[0].split("_")[3])
-            branch_length[f"M_{u}_to_{v}"] = -math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1]))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)])))))
+            branch_length[f"M_{u}_to_{v}"] = (1/4)*(-math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1]))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)]))))))
     else:
         debg_node_distr["0"] = node_distr
         for p in params.items():
             u, v = int(p[0].split("_")[1]), int(p[0].split("_")[3])
             debg_node_distr[str(v)] = np.matmul(debg_node_distr[str(u)], p[1].transition_matrix)
-            branch_length[f"M_{u}_to_{v}"] = -math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1].transition_matrix))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)])))))
+            branch_length[f"M_{u}_to_{v}"] = (1/4)*(-math.log((np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(u)])))*np.linalg.det(p[1].transition_matrix))/(np.sqrt(np.linalg.det(np.diag(debg_node_distr[str(v)]))))))
     return branch_length
 
 def get_fasta_alignment(params, node_distr, directory, length): 
@@ -332,6 +332,9 @@ for r in range(repetitions):
     logL_ = 0
 
     while np.abs(logL_ - logL) > eps and iter < 100:
+        print("logL:", logL)
+        print(np.abs(logL_ - logL))
+        print("...................")
         if iter > 0:
             logL = logL_
 

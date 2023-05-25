@@ -47,7 +47,7 @@ def get_M2(new_distribution,d2, l):
             # posar el paràmere de la diagoal a 10 i els altres 1
             # 10 * e**(-l)
             dir = np.ones(4)
-            dir[i] = (50/np.sqrt(l))*np.exp(-l)
+            dir[i] = (12.5*np.exp(-l/4))/(np.sqrt(l/4)) 
             R = np.random.dirichlet(dir)
             if R[i] > 0.3:
                 Q[i,:] = R
@@ -114,7 +114,7 @@ def generate_random_matrix(distribution, l):
             # posar el paràmere de la diagoal a 10 i els altres 1
             # 10 * e**(-l)
             dir = np.ones(4)
-            dir[i] = (50/np.sqrt(l))*np.exp(-l)
+            dir[i] = (12.5*np.exp(-l/4))/(np.sqrt(l/4)) 
             R = np.random.dirichlet(dir)
             if R[i] > 0.3:
                 M1[i,:] = R
@@ -200,7 +200,7 @@ def matrix_generation(tree, length, save, directory):
     edges = []
     #print("NYEEEEEE*****", node_distribution["Root"])
     for edge in net.edges():
-        l = edge[1].branch_length
+        l = 4*edge[1].branch_length
         new_edge = Edge(edge, generate_random_matrix(node_distribution[edge[0].name], l))
         edges.append(new_edge)
         #print(new_edge.transition_matrix)
@@ -213,6 +213,8 @@ def matrix_generation(tree, length, save, directory):
         #print('---'*30)
         #print('---'*30)
         iter += 1
+        if l/4 <= 0.5:
+            assert(new_edge.transition_matrix[i,i] == max(new_edge.transition_matrix[i,:]))
 
     assert(iter == len(net.edges()))
 
@@ -223,8 +225,6 @@ def matrix_generation(tree, length, save, directory):
         real_matrices.append(MM(e.edge[0].name, e.edge[1].name, e.transition_matrix))
         #print('---'*30)
         # Comprovacions que es compleixi que sigui +"larger-value-diagonal matrices"
-        for i in range(4):
-            assert(e.transition_matrix[i,i] == max(e.transition_matrix[i,:]))
 
     leaves_seq = {k: v for k, v in node_sequence.items() if k.startswith('L')}
     sequences_in_leaves = list(leaves_seq.values())

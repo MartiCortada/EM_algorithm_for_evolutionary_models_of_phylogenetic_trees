@@ -69,7 +69,7 @@ def get_M2(new_distribution,d2,l):
             # 10 * e**(-l)
             dir = np.ones(4)
             # dir[i] = 50*np.exp(-l)
-            dir[i] = (50/np.sqrt(l))*np.exp(-l)
+            dir[i] = (12.5*np.exp(-l/4))/(np.sqrt(l/4))   
             R = np.random.dirichlet(dir)
             if R[i] > 0.3:
                 Q[i,:] = R 
@@ -123,7 +123,7 @@ def generate_random_matrix(distribution, l):
             # 10 * e**(-l)
             dir = np.ones(4)
             # dir[i] = 50*np.exp(-l)
-            dir[i] = (50/np.sqrt(l))*np.exp(-l)
+            dir[i] = (12.5*np.exp(-l/4))/(np.sqrt(l/4)) 
             R = np.random.dirichlet(dir)
             if R[i] > 0.3:
                 M1[i,:] = R 
@@ -168,7 +168,7 @@ def simulate(net, length, directory):
     edges = []
     for edge in net.edges():
         # Extract branch length
-        l = edge[1].branch_length
+        l = 4*edge[1].branch_length
         new_edge = Edge(edge, generate_random_matrix(node_distribution[edge[0].name], l))
         edges.append(new_edge)
         node_distribution[edge[1].name] = np.matmul(node_distribution[edge[0].name],new_edge.transition_matrix)
@@ -177,6 +177,9 @@ def simulate(net, length, directory):
         # create alignment for the node
         node_sequence[edge[1].name] = generate_sequences(new_edge.transition_matrix, node_sequence[edge[0].name])
         iter += 1
+        if l/4 <= 0.5:
+            for i in range(4):
+                assert(new_edge.transition_matrix[i,i] == max(new_edge.transition_matrix[i,:]))
     assert(iter == len(net.edges()))
     leaves_seq = {k: v for k, v in node_sequence.items() if k.startswith('L')}
     sequences_in_leaves = list(leaves_seq.values())
