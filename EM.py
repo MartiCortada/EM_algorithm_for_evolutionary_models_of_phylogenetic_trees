@@ -330,11 +330,17 @@ for r in range(repetitions):
     iter = 0                        # iteration counter 
     logL = log_likelihood(states, u_i, params, estimated_root_distribution, n_int)
     logL_ = 0
+    loglikeligood = []
+    loglikeligood.append(logL)
+
+    # Log-likelihood of real parameters
+    logL_real_parameters = log_likelihood(states, u_i, PARAMS_init, estimated_root_distribution, n_int)
+    if r == 0:
+        out = open(directory+"Loglikelihood_real_param.txt", "w", encoding='latin-1')
+        out.write(f"{logL_real_parameters}")
+        out.close() 
 
     while np.abs(logL_ - logL) > eps and iter < 100:
-        print("logL:", logL)
-        print(np.abs(logL_ - logL))
-        print("...................")
         if iter > 0:
             logL = logL_
 
@@ -413,6 +419,7 @@ for r in range(repetitions):
         ################## Compute log-likelihood of the estimated parameters ##################
         ########################################################################################
         logL_ = log_likelihood(states, u_i, params, root_distr, n_int)
+        loglikeligood.append(logL_)
 
         iter += 1
     end_time = time.time()
@@ -434,6 +441,7 @@ for r in range(repetitions):
         M_estimation[p[0]] = p[1].transition_matrix
     np.save(rep_directory+"M_estimation.npy", M_estimation)
     np.save(rep_directory+"root_estimation.npy", root_distr)
+    np.save(rep_directory+"loglikelihood.npy", loglikeligood)
     bl = compute_branch_length(params, root_distr, False)
     np.save(rep_directory + "estimated_branch_lengths", bl) 
 
