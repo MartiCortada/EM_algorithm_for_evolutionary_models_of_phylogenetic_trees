@@ -26,7 +26,7 @@ try:
 except FileExistsError:
     pass
 try:
-    directory += "RANDOM_vs_SPECTRAL_EM_a_b_0.05/" 
+    directory += "RANDOM_vs_SPECTRAL_EM_" + str(length) + "_a_b_10/" 
     os.mkdir(directory)
 except FileExistsError:
     pass
@@ -422,7 +422,7 @@ try:
 except FileExistsError:
     pass
 try:
-    directory += "SPECTRAL_vs_RANDOM_EM_a_b_0.05/" 
+    directory += "SPECTRAL_vs_RANDOM_EM_" + str(length) + "_a_b_10/" 
     os.mkdir(directory)
 except FileExistsError:
     pass
@@ -462,15 +462,15 @@ for r in range(repetitions):
         name = "M_" + u + "_to_" + v
         PARAMS[name] = new_edge
         i += 1
-    # Check if the file exists
-    try:
-        file_name = f"{n_leaves}_leaves_{length}length_sequences.fasta"
-        if os.path.exists(directory+file_name):
-            # Delete the file
-            os.remove(file_path)
-    except OSError as error:
-        print("File does not exist.")
-        pass 
+    # # Check if the file exists
+    # try:
+    #     file_name = f"{n_leaves}_leaves_{length}length_sequences.fasta"
+    #     if os.path.exists(directory+file_name):
+    #         # Delete the file
+    #         os.remove(file_path)
+    # except OSError as error:
+    #     print("File does not exist.")
+    #     pass 
     params = copy.copy(PARAMS)      # copy of the parameters (will be updated at each iteration)
     
     # Count all the leaves ocurrences 
