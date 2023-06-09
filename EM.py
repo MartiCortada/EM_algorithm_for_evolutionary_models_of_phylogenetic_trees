@@ -234,7 +234,6 @@ for r in range(repetitions):
         os.mkdir(rep_directory)
     except FileExistsError:
         pass
-    start_time = time.time()
     ################################################################################################
     ################################ STEP 0: Initialise parameters #################################
     ################################################################################################
@@ -338,6 +337,7 @@ for r in range(repetitions):
         out.write(f"{logL_real_parameters}")
         out.close() 
 
+    start_time = time.time()
     while np.abs(logL_ - logL) > eps and iter < 100:
         if iter > 0:
             logL = logL_
